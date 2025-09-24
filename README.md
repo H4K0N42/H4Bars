@@ -1,21 +1,17 @@
-# Bedtime: A progress bar that shows your Bedtime
+# TTH: A progress bar that shows `t`ime `t`ill your next `h`olidays
 
 ###### Forked from [veebch/hometime](https://github.com/veebch/hometime)
 
-A physical LED progress bar for your day that shows the time remaining until your configured bedtime. The bar uses an addressable LED strip and a Raspberry Pi Pico W. It:
+A physical LED progress bar for your day that shows the days until the next holidays. The bar uses an addressable LED strip and a Raspberry Pi Pico W. It:
 
-- keeps you posted on how much time has passed since you started your PC,
-- shows the progression toward your bedtime,
-- Turns red when your set bedtime is reached
-
-## How it works
-
-The progress bar displays your progress toward your configured bedtime. It connects to Wi-Fi, grabs the current time from a [time API](https://timeapi.io), then shows you how much time has passed since you started your PC and how far you are from your bedtime.
+- automatically reads start and end dates from your Google Calendar => no code updates needed when your holidays change,
+- shows 1 px / day until your next holidays,
+- changes colors dynamically based on the percentage of days completed.
 
 ## Hardware
 
 - Raspberry Pi Pico W
-- 5V Addressable LED strip (we used a 1 m, 144 LED, WS2812B Eco).
+- 5V Addressable LED strip (I use a 1 m, 144 LED, WS2812B).
 
 ## Assembly
 
@@ -39,8 +35,8 @@ Clone this repository to your computer using the commands (from a terminal):
 
 ```
 cd ~
-git clone https://github.com/H4K0N42/bedtime.git
-cd bedtime
+git clone -b tth https://github.com/H4K0N42/H4Bars.git
+cd H4Bars
 mv config_example.py config.py
 mv wifi_example.json wifi.json
 ```
@@ -65,12 +61,15 @@ ampy -p /dev/ttyACM0 put ap_templates
 
 Done! All the required files should now be on the Pico. Whenever you connect to USB power the script will autorun.
 
-**Note:** Make sure you have set up an HTTP server on your PC (it can serve a blank webpage)
-
 ## Configuration
 
-Set your wifi + password in `wifi.json`.
+1. Set up your Google Calendar API key and get the public calendar link:
+   - API key: [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+   - Public calendar link: Share your calendar and copy the link ending in `@group.calendar.google.com`
+   - If you need help, you can follow step 4 of [this](https://medium.com/p/workday-progressbar-with-google-calendar-integration-b266aabd32a8) guide.
+2. Configure parameters in `config.py`.
+3. Set your Wi-Fi credentials in `wifi.json`.
 
-The parameters are in `config.py`.
+The script always selects the 2 latest events with the name `tth`. The days that the events are on are included.
 
 That's it. Now whenever you plug it in to power, the code will autorun.
