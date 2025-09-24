@@ -2,7 +2,7 @@
 
 ###### Forked from [veebch/hometime](https://github.com/veebch/hometime)
 
-A physical LED progress bar for your day that shows the days until the next holidays. The bar uses an addressable LED strip and a Raspberry Pi Pico W. It:
+A physical LED progress bar that shows the days until the next holidays. The bar uses an addressable LED strip and a Raspberry Pi Pico W. It:
 
 - automatically reads start and end dates from your Google Calendar => no code updates needed when your holidays change,
 - shows 1 px / day until your next holidays,
