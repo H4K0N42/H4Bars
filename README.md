@@ -1,4 +1,4 @@
-# TTH: A progress bar that shows `t`ime `t`ill your next `h`olidays
+# TTH: A progress bar that shows the `t`ime `t`ill your next `h`olidays
 
 ###### Forked from [veebch/hometime](https://github.com/veebch/hometime)
 
