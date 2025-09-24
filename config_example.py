@@ -30,4 +30,5 @@ DIM = 0.5                                       # Brightness of the Pixels 0..1;
 # Other
 
 DELWIFI = False                                 # Deletes wifi credentials if the connection fails
+USE_HTTP = True                                 # If False, Bootsel button is used for clockin / clockout
 PING = "http://192.168.178.42:80"               # Online when an HTTP server responds with status 200

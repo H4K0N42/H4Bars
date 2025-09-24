@@ -21,20 +21,17 @@
 
 from phew import access_point, connect_to_wifi, is_connected_to_wifi, dns, server
 from phew.template import render_template
-from random import choice
-import machine
+import machine      # type: ignore
 import _thread
-import utime
 import time
-import network
 import config
-import urequests
-import neopixel
+import urequests    # type: ignore
+import neopixel     # type: ignore
 import math
 import os
 import json
-import re
 import gc
+import rp2          # type: ignore
 
 # Time with daylight savings time and time zone factored in, edit this to fit where you are
 worldtimeurl = "https://timeapi.io/api/TimeZone/zone?timezone=" + config.TIMEZONE
@@ -45,8 +42,6 @@ schedule = config.SCHEDULE  # Working hours in config file (only used if google 
 flip = config.FLIP
 led = machine.Pin("LED", machine.Pin.OUT)
 led.off()
-led.on()
-time.sleep(1)
 checkevery = config.REFRESH   # Number of seconds for interval refreshinag neopixel
 AP_NAME = "veebprojects"
 AP_DOMAIN = "pipico.net"
@@ -55,6 +50,7 @@ WIFI_FILE = "wifi.json"
 delwifi = config.DELWIFI
 dest = config.PING
 dim = config.DIM
+httpmode = config.USE_HTTP
 
 def machine_reset():
     print("Resetting...")
@@ -207,6 +203,21 @@ def bedtime(np):
     machine_reset()
 
 
+def bootsel(state, httpmode, hoursin, clockin):
+    while rp2.bootsel_button() == 1:
+        led.off()
+        time.sleep(.25)
+        led.on()
+        time.sleep(.25)
+    
+    if state:
+        if httpmode: return True, hoursin
+        else: return False, clockin
+    else:
+        if httpmode: return False, clockin
+        else: return True, hoursin
+            
+
 def progress_bar(np):
     print("Entering Progress Bar Display Mode")
     # When you plug in, update rather than wait until the stroke of the next minute
@@ -221,6 +232,8 @@ def progress_bar(np):
     np.write()
     colors = convertcolors(hexcolors)
     clockout = 0
+    working = False
+    state = False
     laststate = False
     now = time.gmtime()
     dayname = whatday(int(now[6]))
@@ -231,18 +244,23 @@ def progress_bar(np):
     time.sleep(1)
     while True:
         try:
+            led.on()
             # wipe led clean before adding the pixels that represent the bar
             if nowrite == False: 
                 for i in range(n): np[i] = (0, 0, 0)
             now = time.gmtime()
             if now[3] == 4 and now[4] == 0: machine_reset()
             hoursin = float(now[3])+float(now[4])/60 + float(now[5])/3600  # hours into the day
-            state = is_online(dest, laststate)
+            if working and hoursin < clockin: hoursin += 24
+            if httpmode:
+                state = is_online(dest, laststate)
+            led.off()
             if laststate and state == False: bedtime(np)
             if laststate == False and state: clockin = hoursin
             if state: working = atwork(clockin, clockout, hoursin)
             else: working = False
             print(f"Working={working}, clock-in={clockin}, clock-out={clockout}, hours-in={hoursin}, is_online={state}")
+            laststate = state
             if working: # These only need to be added to the bar if you're working
                 for i in range(checkevery*10):
                     bar(np, hoursin, clockin, clockout, rotation, colors, n, dim)                
@@ -250,14 +268,20 @@ def progress_bar(np):
                     np.write()
                     if flip: rotation += 1
                     else: rotation -= 1
+                    if rp2.bootsel_button() == 1: 
+                        state, clockin = bootsel(state, httpmode, hoursin, clockin)
+                        break
                     time.sleep(.1)
             elif state and nowrite == False:
                 red(np, dim, colors)
                 nowrite = True
             if nowrite == False: np.write()
             gc.collect()  # clean up garbage in memory
-            laststate = state
-            if working == False: time.sleep(checkevery) 
+            if working == False:
+                for i in range(checkevery*10):
+                    if rp2.bootsel_button() == 1: 
+                        state, clockin = bootsel(state, httpmode, hoursin, clockin)
+                    time.sleep(.1)
         except Exception as e:
             print('Exception: ', e)
             off(np)
@@ -324,6 +348,7 @@ def main():
                 np[n-1] = (int(255*dim), 0, 0)
                 np.write()
                 machine_reset()
+            led.on()
             print(f"Connected to wifi, IP address {ip_address}")
             progress_bar(np)  # Contains all the progress bar code
             
@@ -334,7 +359,6 @@ def main():
             np[0] = (int(255*dim), 0, 0)
             np[n-1] = (int(255*dim), 0, 0)
             np.write()  
-            time.sleep(3)
             machine_reset()
         
         np[0] = (int(255*dim), int(255*dim), 0)
