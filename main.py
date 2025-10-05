@@ -57,26 +57,6 @@ def convertcolors(hexcolors):
     return colors
 
 
-def getcolor(colors, n, pos, dim):
-    pos = pos % n
-    colorcount = len(colors)
-    steps = n // colorcount
-
-    if pos >= steps * colorcount:
-        color = tuple(int(round(c * dim)) for c in colors[0])
-        return color
-    
-    step = pos % steps
-    start = colors[int((pos/steps)%colorcount)]
-    end = colors[int(((pos/steps+1)%colorcount))]
-    color = (
-    int(round(start[0] + (end[0] - start[0]) * step / (steps - 1)) * dim),
-    int(round(start[1] + (end[1] - start[1]) * step / (steps - 1)) * dim),
-    int(round(start[2] + (end[2] - start[2]) * step / (steps - 1)) * dim)
-    )
-    return color
-
-
 def update():
     global daystotal, daysleft
 
@@ -170,7 +150,7 @@ def bar(np, c):
         for j in range(daystotal): np[j] = color
         for j in range(i, daystotal): np[j] = (0, 0, 0)
         np.write()
-        time.sleep(.05)
+        time.sleep(.025)
     
     for i in range(10*10):
         if rp2.bootsel_button() == 1:
@@ -201,9 +181,9 @@ def convertcolors(hexcolors):
 def getcolor(colors, n, pos, dim):
     pos = pos % n
     colorcount = len(colors)
-    steps = n // colorcount
+    steps = n // (colorcount - 1)
 
-    if pos >= steps * colorcount:
+    if pos >= steps * (colorcount - 1):
         color = tuple(int(round(c * dim)) for c in colors[-1])
         return color
     
